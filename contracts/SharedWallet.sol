@@ -9,6 +9,9 @@ contract Allowance is Ownable{
     event AllowanceChanged(address indexed forWho, address indexed byWhom, 
         uint oldAmount, uint newAmount);
 
+    event MoneySent(address indexed receiver, uint amount);
+    event MoneyReceived(address indexed sender, uint amount);
+
     function isOwner() view internal returns (bool){
         return owner() == msg.sender;
     }
@@ -38,8 +41,11 @@ contract SharedWallet is Allowance{
         if (!isOwner()){
             reduceAllowance(msg.sender, amount);
         }
+        emit MoneySent(to, amount);
         to.transfer(amount);
     }
 
-    receive() external payable {}
+    receive() external payable {
+        emit MoneyReceived(msg.sender, msg.value);
+    }
 }
