@@ -48,4 +48,8 @@ contract SharedWallet is Allowance{
     receive() external payable {
         emit MoneyReceived(msg.sender, msg.value);
     }
+
+    function renounceOwnership() public override view onlyOwner {
+        revert("Renouncing ownership is not allowed");
+    }
 }
