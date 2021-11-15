@@ -3,7 +3,11 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+
 contract Allowance is Ownable{
+
+    event AllowanceChanged(address indexed forWho, address indexed byWhom, 
+        uint oldAmount, uint newAmount);
 
     function isOwner() view internal returns (bool){
         return owner() == msg.sender;
@@ -11,8 +15,14 @@ contract Allowance is Ownable{
 
     mapping (address => uint) allowances;
 
-    function changeAllowance(address addTo, uint amount ) public onlyOwner{
-        allowances[addTo] = amount;
+    function changeAllowance(address toChange, uint amount ) public onlyOwner{
+        emit AllowanceChanged(toChange, msg.sender, allowances[toChange], amount);
+        allowances[toChange] = amount;
+    }
+
+    function reduceAllowance(address toReduce, uint amount) internal {
+        emit AllowanceChanged(toReduce, msg.sender, allowances[toReduce], allowances[toReduce]- amount);
+        allowances[toReduce] -= amount;
     }
 
     modifier ownerOrAllowed( uint amount){
@@ -26,7 +36,7 @@ contract SharedWallet is Allowance{
     function withdrawMoney(address payable to, uint amount) public ownerOrAllowed(amount){
         require(amount <= address(this).balance, "Not enough funds");
         if (!isOwner()){
-            allowances[msg.sender] -= amount;
+            reduceAllowance(msg.sender, amount);
         }
         to.transfer(amount);
     }
